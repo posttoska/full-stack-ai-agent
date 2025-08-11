@@ -12,7 +12,7 @@ export const createTicket = async (req, res) => {
 
         // create ticket
         const newTicket = Ticket.create({
-            ticket,
+            title,
             description,
             createdBy: req.user._id.toString()
         })
@@ -21,6 +21,7 @@ export const createTicket = async (req, res) => {
         await inngest.send({
             name: "ticket/created",
             data: {
+                ticketId: (await newTicket)._id.toString(),
                 title,
                 description,
                 createdBy: req.user._id.toString()
@@ -51,8 +52,8 @@ export const getTickets = async (req, res) => {
 
         // ticket for user (see ticket that user created)
         } else {
-            ticket = await Ticket.find({createdBy: user._id})
-            .select("title desciption status createdAt")
+            tickets = await Ticket.find({createdBy: user._id})
+            .select("title description status createdAt")
             .sort({createdAt: -1})
         }
         // return tickets

@@ -10,7 +10,6 @@ export const signup = async (req, res) => {
         const user = await User.create({email, password: hashed, skills})
 
         // fire inngest event
-        
         await inngest.send({
             name: "user/signup",
             data: {
@@ -99,8 +98,8 @@ export const getUsers = async (req, res) => {
             return res.status(403).json({ error: "Forbidden" });
         }
 
-        const user = await User.find().select("-password")
-        return res.json(user);
+        const users = await User.find().select("-password")
+        return res.json(users);
         
     } catch (error) {
         res.status(500).json({ error: "Failed to retrieve user", details: error.message });

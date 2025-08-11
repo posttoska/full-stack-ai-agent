@@ -1,8 +1,8 @@
-import { inngest } from "../client";
+import { inngest } from "../client.js";
 import Ticket from "../../models/ticket.js"
 import User from "../../models/user.js";
 import { NonRetriableError } from "inngest";
-import { sendMail } from "../../utils/mailer";
+import { sendMail } from "../../utils/mailer.js";
 import analyzeTicket from "../../utils/ai.js";
 
 
@@ -35,7 +35,7 @@ export const onTicketCreated = inngest.createFunction(
 
                 if(aiResponse) {
                     await Ticket.findByIdAndUpdate(ticket._id, {
-                        priority: ["low", "medium", "high"].includes(aiResponse.priority) ? "medium" : aiResponse.priority,
+                        priority: !["low", "medium", "high"].includes(aiResponse.priority) ? "medium" : aiResponse.priority,
                         helpfulNotes: aiResponse.helpfulNotes,
                         status: "IN_PROGRESS",
                         relatedSkills: aiResponse.relatedSkills

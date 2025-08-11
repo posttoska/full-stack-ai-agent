@@ -72,4 +72,6 @@ const raw = response.output[0].context
 
     }
 
-}
+};
+
+export default analyzeTicket;
