@@ -1,49 +1,106 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-function Tickets() {
+export default function Tickets() {
+  const [form, setForm] = useState({ title: "", description: "" });
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({email: "", password: ""})
-  const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
+  const token = localStorage.getItem("token");
+
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets`, {
+        headers: { Authorization: `Bearer ${token}` },
+        method: "GET",
+      });
+      const data = await res.json();
+      setTickets(data.tickets || []);
+    } catch (err) {
+      console.error("Failed to fetch tickets:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const handleChange = (e) => {
-    setForm({...form, [e.taget.name]: e.target.value})
-  }
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-  const handleTickets = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-        const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/tickets`, 
-          {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(form)
-          })
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      });
 
-          const data = await res.json()
-          if(res.ok) {
-            localStorage.setItem("token", data.token)
-            localStorage.setItem("token", JSON.stringify(data.user))
-            navigate("/")
+      const data = await res.json();
 
-          } else {
-            alert(data.message || "signup failed")
-          }
-
-    } catch (error) {
-      alert("something went wrong during signup")
+      if (res.ok) {
+        setForm({ title: "", description: "" });
+        fetchTickets(); // Refresh list
+      } else {
+        alert(data.message || "Ticket creation failed");
+      }
+    } catch (err) {
+      alert("Error creating ticket");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    finally {
-      setLoading(false)
-    }
+  return (
+    <div className="p-4 max-w-3xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Create Ticket</h2>
 
-  }
+      <form onSubmit={handleSubmit} className="space-y-3 mb-8">
+        <input
+          name="title"
+          value={form.title}
+          onChange={handleChange}
+          placeholder="Ticket Title"
+          className="input input-bordered w-full"
+          required
+        />
+        <textarea
+          name="description"
+          value={form.description}
+          onChange={handleChange}
+          placeholder="Ticket Description"
+          className="textarea textarea-bordered w-full"
+          required
+        ></textarea>
+        <button className="btn btn-primary" type="submit" disabled={loading}>
+          {loading ? "Submitting..." : "Submit Ticket"}
+        </button>
+      </form>
 
-  return <div>tickets</div>;
+      <h2 className="text-xl font-semibold mb-2">All Tickets</h2>
+      <div className="space-y-3">
+        {tickets.map((ticket) => (
+          <Link
+            key={ticket._id}
+            className="card shadow-md p-4 bg-gray-800"
+            to={`/tickets/${ticket._id}`}
+          >
+            <h3 className="font-bold text-lg">{ticket.title}</h3>
+            <p className="text-sm">{ticket.description}</p>
+            <p className="text-sm text-gray-500">
+              Created At: {new Date(ticket.createdAt).toLocaleString()}
+            </p>
+          </Link>
+        ))}
+        {tickets.length === 0 && <p>No tickets submitted yet.</p>}
+      </div>
+    </div>
+  );
 }
-
-export default Tickets;
